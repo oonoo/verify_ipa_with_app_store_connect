@@ -8,10 +8,10 @@ Gem::Specification.new do |spec|
   spec.name          = 'fastlane-plugin-verify_ipa_with_app_store_connect'
   spec.version       = Fastlane::VerifyIpaWithAppStoreConnect::VERSION
   spec.author        = 'Onno Bergob'
-  spec.email         = 'o.bergob@mytaxi.com'
+  spec.email         = 'oonoo@github.com'
 
   spec.summary       = 'Uses iTMSTransporter to verify an ipa with App Store Connect.'
-  # spec.homepage      = "https://github.com/<GITHUB_USERNAME>/fastlane-plugin-verify_ipa_with_app_store_connect"
+  spec.homepage      = "https://github.com/oonoo/verify_ipa_with_app_store_connect"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)
