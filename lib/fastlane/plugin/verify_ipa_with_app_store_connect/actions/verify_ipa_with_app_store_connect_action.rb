@@ -5,56 +5,49 @@ module Fastlane
   module Actions
     class VerifyIpaWithAppStoreConnectAction < Action
       def self.run(params)
-        UI.message "Parameter ipa_path: #{params[:ipa_path]}"
+        ipa_path = params[:ipa_path]
 
-        app = find_app(params)
-
-        package_path = FastlaneCore::IpaUploadPackageBuilder.new.generate(
-          app_id: app.id,
-          ipa_path: params[:ipa_path],
-          package_path: "/tmp",
-          platform: params[:platform]
-        )
+        UI.message "Parameter ipa_path: #{ipa_path}"
 
         api_token = params[:api_token]
-        transporter = FastlaneCore::JavaTransporterExecutor.new
+
+        transporter = FastlaneCore::AltoolTransporterExecutor.new
+
+        api_key = { key_id: api_token.key_id, issuer_id: api_token.issuer_id, key: api_token.key_raw }
+
+        api_key = api_key.clone
+        api_key[:key_dir] = Dir.mktmpdir("deliver-")
+        # Specified p8 needs to be generated to call altool
+        File.open(File.join(api_key[:key_dir], "AuthKey_#{api_key[:key_id]}.p8"), "wb") do |p8|
+          p8.write(api_key[:key])
+        end
 
         command = [
-          'xcrun iTMSTransporter',
-          '-m verify',
-          "-jwt #{api_token.text}",
-          "-f #{package_path.shellescape}",
-          '2>&1' # cause stderr to be written to stdout
-        ].compact.join(' ') # compact gets rid of the possibly nil ENV value
-
+          "API_PRIVATE_KEYS_DIR=#{api_key[:key_dir]}",
+          "xcrun altool",
+          "--validate-app",
+          "--apiKey #{api_key[:key_id]}",
+          "--apiIssuer #{api_key[:issuer_id]}",
+          "-t #{params[:platform]}",
+          "-f #{ipa_path.shellescape}",
+          "-k 100000"
+        ].compact.join(' ')
 
         UI.verbose(command)
 
-        result = transporter.execute(command, false)
+        begin
+          result = transporter.execute(command, false)
+        ensure
+          FileUtils.rm_rf(api_key[:key_dir])  # we don't need the file with the api key any more
+          FileUtils.rm_rf(package_path) # we don't need the ipa any more
+        end
 
         if result
           UI.header("Successfully verified package with App Store Connect.")
         end
 
-        FileUtils.rm_rf(package_path) unless Helper.test? # we don't need the package any more
-
         unless result
           UI.user_error!("Error verifying ipa file!")
-        end
-      end
-
-      def self.find_app(options)
-        app_identifier = options[:app_identifier]
-
-        if !app_identifier.to_s.empty?
-          Spaceship::ConnectAPI.token = options[:api_token]
-          app = Spaceship::ConnectAPI::App.find(app_identifier)
-        end
-
-        if app
-          return app
-        else
-          UI.user_error!("Could not find app with app identifier '#{options[:app_identifier]}' in your App Store Connect account")
         end
       end
 
@@ -72,11 +65,6 @@ module Fastlane
 
       def self.available_options
         [
-          FastlaneCore::ConfigItem.new(key: :app_identifier,
-                                       env_name: "FL_VERIFY_IPA_APP_IDENTIFIER",
-                                       description: "Provide the app identifier",
-                                       is_string: true, # true: verifies the input is a string, false: every kind of value
-                                       default_value: false), # the default value if the user didn't provide one
           FastlaneCore::ConfigItem.new(key: :ipa_path,
                                        env_name: "FL_VERIFY_IPA_IPA_PATH",
                                        description: "Path to the ipa file to validate",
