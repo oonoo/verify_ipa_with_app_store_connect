@@ -39,7 +39,7 @@ module Fastlane
           result = transporter.execute(command, false)
         ensure
           FileUtils.rm_rf(api_key[:key_dir])  # we don't need the file with the api key any more
-          FileUtils.rm_rf(package_path) # we don't need the ipa any more
+          # FileUtils.rm_rf(package_path) # we don't need the ipa any more
         end
 
         if result
