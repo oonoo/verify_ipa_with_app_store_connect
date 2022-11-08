@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.author        = 'Onno Bergob'
   spec.email         = 'oonoo@github.com'
 
-  spec.summary       = 'Uses iTMSTransporter to verify an ipa with App Store Connect.'
+  spec.summary       = 'Uses altool to verify an ipa with App Store Connect.'
   spec.homepage      = "https://github.com/oonoo/verify_ipa_with_app_store_connect"
   spec.license       = "MIT"
 
@@ -31,5 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('rubocop', '0.49.1')
   spec.add_development_dependency('rubocop-require_tools')
   spec.add_development_dependency('simplecov')
-  spec.add_development_dependency('fastlane', '>= 2.174.0')
+  spec.add_development_dependency('fastlane', '>= 2.210.1')
 end
